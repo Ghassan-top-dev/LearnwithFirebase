@@ -1,0 +1,98 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+}
+
+.calendar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 5px auto;
+    max-width: 1000px; /* Adjust based on your screen size */
+}
+
+#month-labels { 
+    display: flex;
+    margin-left: 30px; /* Space for day labels */
+    gap: 6.5px; /* Add gap between month labels */
+}
+
+.month-label {
+    font-size: 12px;
+    width: 15px; /* Match the width of the grid cells */
+    text-align: center;
+}
+
+.calendar-wrapper {
+    display: flex;
+}
+#day-labels {
+    position: relative; /* Establish a positioning context */
+    margin-right: 30px; /* Space between labels and grid */
+}
+
+.day-label {
+    position: absolute; /* Position each label independently */
+    font-size: 12px;
+    height: 15px; /* Match the height of the grid cells */
+    line-height: 15px;
+    text-align: right;
+    margin-right: 5px;
+}
+
+/* Fine-tune each label's position */
+.day-label:nth-child(1) { /* Monday */
+    top: 20px; 
+}
+
+.day-label:nth-child(2) { /* Wednesday */
+    top: 60px; 
+}
+
+.day-label:nth-child(3) { /* Friday */
+    top: 100px; 
+}
+
+#calendar {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr); /* 7 rows for each day of the week */
+    grid-auto-flow: column; /* Arrange items in columns */
+    gap: 5px;
+}
+
+.day {
+    width: 15px;
+    height: 15px;
+    background-color: #ebedf0; /* Default color for no contributions */
+    border-radius: 3px;
+}
+
+/* Contribution levels */
+.day.level-1 {
+    background-color: #9be9a8; /* Light green */
+}
+
+.day.level-2 {
+    background-color: #40c463; /* Medium green */
+}
+
+.day.level-3 {
+    background-color: #30a14e; /* Darker green */
+}
+
+.day.level-4 {
+    background-color: #216e39; /* Even darker green */
+}
+
+.day.level-5 {
+    background-color: #144d25; /* Darkest green */
+}
+
+
+#commitButton, #resetButton {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
