@@ -106,3 +106,57 @@ button:active {
 #addNote {
     margin-left: 20px;
 }
+
+
+/* General Navbar Styles */
+.navbar {
+    position: sticky; /* Makes the navbar stick to the top */
+    top: 0;
+    z-index: 1000; /* Ensures it stays above other content */
+    background-color: #2c3e50; /* Dark blue color for a modern look */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Aligns logo and links properly */
+    padding: 10px 20px; /* Adds spacing inside the navbar */
+    width: 100%; /* Ensures the navbar spans the full width */
+    margin: 0; /* Removes any default margins */
+}
+
+.navbar-logo {
+    max-height: 50px;
+    margin-right: 20px;
+    transition: transform 0.3s ease-in-out; /* Smooth hover effect */
+}
+
+.navbar-logo:hover {
+    transform: scale(1.1); /* Slightly enlarges the logo on hover */
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.navbar ul li {
+    margin-left: 20px; /* Space between menu items */
+}
+
+.navbar ul li a {
+    display: block;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transitions */
+}
+
+.navbar ul li a:hover {
+    background-color: #3498db; /* Light blue hover effect */
+    color: #fff;
+}

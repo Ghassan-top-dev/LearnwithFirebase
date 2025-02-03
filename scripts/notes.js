@@ -1,118 +1,92 @@
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
-import { auth, db } from '../firebaseConfig.js';
+import { 
+    getFirestore, collection, addDoc, serverTimestamp, 
+    doc, getDoc, setDoc, increment, onSnapshot, query, orderBy 
+} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+import { db } from "../firebaseConfig.js";
 
+const auth = getAuth();
 const noteInput = document.getElementById('noteInput');
 const addNoteButton = document.getElementById('addNote');
-const notesList = document.getElementById('notesList');
+const notesList = document.getElementById('notesList'); // Make sure this exists in index.html
 
-// 1. Helper function to get sanitized collection name
-function getCollectionName(email) {
-    // Input email: user@example.com
-    // After replacement: notes_user_example_com
-    return `notes_${email.replace(/[.@]/g, '_')}`;
-}
-
-// Add note to Firestore
+// Function to add a note
 async function addNote() {
-    // 2. Check if note input is empty 
-    if(!noteInput.value.trim()) return; 
+    if (!noteInput.value.trim()) return;
 
-    // Add note to Firestore
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("User not logged in");
+        return;
+    }
+
     try {
-        // 3. Get current user object
-        const user = auth.currentUser; 
-        if(!user) return; 
-
-        // 4a. Get user collection object
-
-        const userCollection = collection(db, getCollectionName(user.email)); 
-        // 4b. Add note to Firestore
-
+        // Add note to Firestore
+        const userCollection = collection(db, "notes", user.uid, "userNotes");
         await addDoc(userCollection, {
-
             content: noteInput.value,
             createdAt: serverTimestamp()
         });
-        
-        // 4c. Clear note input
-        noteInput.value = ''; 
+
+        // Update contribution count in Firestore
+        const contributionsRef = doc(db, "contributions", user.uid);
+        await setDoc(contributionsRef, { count: increment(1) }, { merge: true });
+
+        // Update local storage for the grid
+        const today = new Date();
+        const dateString = today.toISOString().split('T')[0];
+        let contributions = JSON.parse(localStorage.getItem('contributions')) || {};
+        contributions[dateString] = (contributions[dateString] || 0) + 1;
+        localStorage.setItem('contributions', JSON.stringify(contributions));
+
+        noteInput.value = ""; // Clear input field
+        console.log("Note added and contribution updated");
+
+        localStorage.setItem('contributions', JSON.stringify(contributions));
+        window.dispatchEvent(new Event('storage'));
 
     } catch (error) {
-        console.error("Error adding note: ", error);
+        console.error("Error adding note:", error);
     }
 }
 
-// Given because the logic closely resembles the code above
-// Delete note from Firestore
-async function deleteNote(docId) {
-    try {
-        const user = auth.currentUser;
-        if (!user) return;
+// Function to display notes in the UI
+function displayNotes(notes) {
+    notesList.innerHTML = ""; // Clear existing notes
 
-        const userCollection = getCollectionName(user.email);
-        await deleteDoc(doc(db, userCollection, docId));
-    } catch (error) {
-        console.error("Error deleting note: ", error);
-    }
-}
-
-// 5. Display notes in real-time
-function setupNotesListener() {
-    // 5a. Get current user object
-    const user = auth.currentUser; 
-    if (!user) return;
-
-    const userCollection = collection(db, getCollectionName(user.email)); 
-
-    // 6a. Get user collection object
-
-    // 6b. Get notes query object
-    const notesQuery = query(
-        userCollection, 
-        orderBy('createdAt', 'desc')
-    )
-    
-
-    // Listen to notes query object in real-time
-    onSnapshot(notesQuery, (snapshot) => {
-        // Clear notes list 
-        notesList.innerHTML = '';
-        // Loop through notes and display them
-        snapshot.forEach((doc) => {
-            // Get note object
-            const note = doc.data();
-            // Create note element
-            const noteElement = document.createElement('div');
-            noteElement.className = 'note-element';
-            
-            // Create content element
-            const contentElement = document.createElement('div');
-            contentElement.className = 'note-content';
-            contentElement.textContent = note.content;
-            
-            // Create delete button
-            const deleteButton = document.createElement('button');
-            deleteButton.className = 'delete-button';
-            deleteButton.textContent = '🗑️';
-            deleteButton.onclick = () => deleteNote(doc.id);
-            
-            // Append elements
-            noteElement.appendChild(contentElement);
-            noteElement.appendChild(deleteButton);
-            notesList.appendChild(noteElement);
-        });
+    notes.forEach(note => {
+        const noteElement = document.createElement("div");
+        noteElement.classList.add("note");
+        noteElement.textContent = note.content;
+        notesList.appendChild(noteElement);
     });
 }
 
-// Add note event listener
-addNoteButton.addEventListener('click', addNote);
+// Function to fetch and display notes in real-time
+function fetchNotes() {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("User not logged in");
+        return;
+    }
 
-// Only display notes if user is logged in
-onAuthStateChanged(auth, (user) => {
+    const userCollection = collection(db, "notes", user.uid, "userNotes");
+    const notesQuery = query(userCollection, orderBy("createdAt", "desc"));
+
+    onSnapshot(notesQuery, (snapshot) => {
+        const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        displayNotes(notes);
+    });
+}
+
+// Attach event listener
+addNoteButton.addEventListener("click", addNote);
+
+// Listen for auth state changes and fetch notes when user logs in
+auth.onAuthStateChanged(user => {
     if (user) {
-        setupNotesListener();
+        fetchNotes();
     } else {
-        notesList.innerHTML = '';
+        notesList.innerHTML = "<p>Please log in to view notes.</p>";
     }
 });
