@@ -139,4 +139,4 @@ document.addEventListener('DOMContentLoaded', function () {
     renderMonthLabels();
     renderDayLabels();
     renderCalendar();
-});
+}); 
